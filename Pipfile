@@ -1,0 +1,21 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+flask = "==2.1.0"
+flask-uploads = "*"
+redis = "==3.5.3"
+celery = "==5.2.0"
+numpy = "*"
+opencv-python = "*"
+flask-file-upload = "*"
+pillow = "*"
+werkzeug = "==0.16.0"
+requests = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.10"
