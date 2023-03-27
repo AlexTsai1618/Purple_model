@@ -13,10 +13,15 @@ pipenv install
 ```bash
 pipenv shell
 ```
-3. Run the web
+3. Run celery
 
 ```bash
-python3 ./web/backend/run.py
+celery -A app.celery worker --loglevel=info
+```
+
+4. Run the web
+```bash
+python3 ./web/backend/app.py
 ```
 
 ### How to install extra packages
