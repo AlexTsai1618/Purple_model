@@ -76,7 +76,7 @@ def plot_bboxes(image, boxes, labels=labels, colors=[], score=True, conf=None):
             detection_list.append(label)
 
     # Saves image with prediction results and bounding boxes/labels if detected
-    cv2.imwrite(r'attack_school/result1.png', image)
+    cv2.imwrite(r'attack_school/noise_result.png', image)
     return detection_list
 
 
@@ -86,42 +86,41 @@ model2 = YOLO(r'attack_school/yolov5lu.pt')  # load a pretrained YOLOv8n model
 img = cv2.imread(image_to_predict, cv2.IMREAD_COLOR)
 
 # ADD ATTACKING LOGIC TO BLUR IMAGE HERE ###############################################################################
-# Specify the kernel size.
-# The greater the size, the more the motion.
-# kernel_size = 30  # removes traffic lights in example1 and all people except 1 in example2
-# kernel_size = 60  # Removes all other cars except for main one in front and all people
-# kernel_size = 90  # detects the 1 car at 32% confidence
-kernel_size = 95  # detects nothing
 
-# Create the vertical kernel.
-kernel_v = np.zeros((kernel_size, kernel_size))
 
-# Create a copy of the same for creating the horizontal kernel.
-kernel_h = np.copy(kernel_v)
+def tamper_img(typ, image):
+    if typ == "gauss":
+        row, col, ch = image.shape
+        mean = 0
+        var = 195  # setting to 195 detects nothing. Anything abit lower, like 185 will detect 1 car or may
+        # miss-classify
+        sigma = var ** 1
+        gauss = np.random.normal(mean, sigma, (row, col, ch))
+        gauss = gauss.reshape(row, col, ch)
+        noisy = image + gauss
+        return noisy
 
-# Fill the middle row with ones.
-kernel_v[:, int((kernel_size - 1) / 2)] = np.ones(kernel_size)
-kernel_h[int((kernel_size - 1) / 2), :] = np.ones(kernel_size)
+    elif typ == "speckle":
+        row, col, ch = image.shape
+        var = 2  # miss-classifies cars as suitcases
+        gauss = np.random.randn(row, col, ch)
+        gauss = gauss.reshape(row, col, ch)
+        noisy = image + image * gauss * var
+        return noisy
 
-# Normalize.
-kernel_v /= kernel_size
-kernel_h /= kernel_size
 
-# Apply the vertical kernel.
-vertical_mb = cv2.filter2D(img, -1, kernel_v)
-
-# Apply the horizontal kernel.
-horizonal_mb = cv2.filter2D(vertical_mb, -1, kernel_h)
+noise_img = tamper_img("speckle", img)  # set it to "gauss" or "speckle"
 
 # load picture to predict on ###########################################################################################
-results = model2.predict(source=horizonal_mb)
+results = model2.predict(source=noise_img)
 
 # returns saved picture in set path defined in function 'plot_bboxes' line 93
-detections = plot_bboxes(horizonal_mb, results[0].boxes.boxes, score=True)
+detections = plot_bboxes(noise_img, results[0].boxes.boxes, score=True)
 
 print("The following were the detections made from YOLO:")
 print("")
 if len(detections) != 0:
+    print("STOP!! Objects detected.")
     for det in detections:
         print(det)
 else:
