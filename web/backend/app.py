@@ -1,9 +1,12 @@
+from flask import render_template
 from flask import Flask, request, jsonify
 from flask_uploads import UploadSet, IMAGES, configure_uploads
+from flask_cors import CORS
 from celery import Celery
 import time
 
-app = Flask(__name__)
+app = Flask(__name__, static_url_path='/static')
+cors = CORS(app, resources={r"/*": {"origins": "*"}})
 app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/0'
 app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/0'
 app.config['UPLOADED_IMAGES_DEST'] = 'uploads/images'
@@ -20,28 +23,25 @@ def process_image(self, filename):
         image_path = images.path(filename)
         total_steps = 10 # total number of processing steps
         for i in range(total_steps):
-            time.sleep(1) # example of a processing step
+            time.sleep(20) # example of a processing step
             progress = int((i+1)/total_steps*100)
             self.update_state(state='PROGRESS', meta={'progress': progress})
         return {'result': 'success'}
 
+
 @app.route('/upload-image', methods=['POST'])
 def upload_image():
-    print(request.files)
     if 'image' not in request.files:
-        return 'No image found', 400
+        return jsonify({'success': False, 'message': 'No image found'}), 400
 
     image = request.files['image']
 
-    if not images.file_allowed(image, image.filename):
-        return 'Invalid file type', 400
-
     filename = images.save(image)
-
     # Create a new Celery task to process the image
     task = process_image.apply_async(args=[filename])
+    print({'success': True, 'filename': filename, 'task_id': task.id})
+    return jsonify({'success': True, 'filename': filename, 'task_id': task.id})
 
-    return jsonify({'task_id': task.id})
 
 @app.route('/task-status/<task_id>')
 def task_status(task_id):
