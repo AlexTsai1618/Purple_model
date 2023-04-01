@@ -1,5 +1,5 @@
 import Layout from "../components/Layout";
-
+import ImageUploadForm from '../components/ImageUploadForm';
 const Home = () => (
 <Layout>
 <div>

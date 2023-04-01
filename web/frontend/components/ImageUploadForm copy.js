@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import ImagePreview from './ImagePreview';
+
 const SuccessMessage = () => (
   <div className="alert alert-success" role="alert">
     Your image was uploaded successfully!
@@ -33,7 +34,6 @@ const ImageUploadForm = () => {
       setMessage(err.message);
     }
   };
-  
 
   useEffect(() => {
     if (response && response.success) {
@@ -44,30 +44,30 @@ const ImageUploadForm = () => {
     }
   }, [response]);
 
-  if (response && response.success) {
-    return (
-    <><SuccessMessage /><ImagePreview /></>
-    );
-  }
-
   return (
-    <form onSubmit={handleSubmit}>
-      <div className="mb-3">
-        <label htmlFor="image" className="form-label">Choose an image to upload:</label>
-        <div className="input-group">
-          <input
-            type="file"
-            className="form-control"
-            id="image"
-            onChange={(e) => setFile(e.target.files[0])}
-          />
-          <button type="submit" className="btn btn-primary" id="basic-addon3">Upload</button>
-        </div>
-        <div className="form-text" id="basic-addon4">
-          {message && <p>{message}</p>}
-        </div>
+    <div className="row">
+      <div className="col">
+        <form onSubmit={handleSubmit}>
+          <div className="mb-3">
+            <label htmlFor="image" className="form-label">Choose an image to upload:</label>
+            <input
+              type="file"
+              className="form-control"
+              id="image"
+              onChange={(e) => setFile(e.target.files[0])}
+            />
+            <div className="form-text">
+              {message && <p>{message}</p>}
+            </div>
+            <button type="submit" className="btn btn-primary">Upload</button>
+          </div>
+        </form>
       </div>
-    </form>
+      <div className="col">
+        {response && response.success && <SuccessMessage />}
+        <ImagePreview />
+      </div>
+    </div>
   );
 };
 

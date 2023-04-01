@@ -8,7 +8,7 @@ print(response)
 task_id = response.json()['task_id']
 
 # Check task status
-url = f'http://localhost:8000/task-status/{task_id}'
+url = f'http://localhost:8000/task-status/865bd913-b132-4415-8d4f-3cdeccaecbbf'
 response = requests.get(url)
 
 print(response.json())

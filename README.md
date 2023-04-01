@@ -16,6 +16,7 @@ pipenv shell
 3. Run celery
 
 ```bash
+cd web/backend
 celery -A app.celery worker --loglevel=info
 ```
 
@@ -32,6 +33,6 @@ pipenv install <package_name>
 
 Todo:
 ### Web
-- [ ] original image preview
-- [ ] progress bar
+- [x] original image preview
+- [ ] progress bar (discuss)
 - [ ] backend send image to frontend
