@@ -29,3 +29,9 @@ python3 ./web/backend/app.py
 ```bash
 pipenv install <package_name>
 ```
+
+Todo:
+### Web
+- [ ] original image preview
+- [ ] progress bar
+- [ ] backend send image to frontend
