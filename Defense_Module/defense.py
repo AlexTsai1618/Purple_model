@@ -3,6 +3,7 @@ import cv2
 import numpy as np
 from skimage import filters
 import skimage.restoration as restoration
+import sys, getopt
 
 # Visualization Functions ##############################################################################################
 labels = {0: u'__background__', 1: u'person', 2: u'bicycle', 3: u'car', 4: u'motorcycle', 5: u'airplane',
@@ -40,7 +41,7 @@ def box_label(image, box, label='', color=(128, 128, 128), txt_color=(255, 255, 
                     lineType=cv2.LINE_AA)
 
 
-def plot_bboxes(image, boxes, labels=labels, colors=[], score=True, conf=None):
+def plot_bboxes(image, boxes, write_loc, labels=labels, colors=[], score=True, conf=None):
     detection_list = []
     # Define colors
     if not colors:
@@ -78,55 +79,65 @@ def plot_bboxes(image, boxes, labels=labels, colors=[], score=True, conf=None):
             detection_list.append(label)
 
     # Saves image with prediction results and bounding boxes/labels if detected
-    cv2.imwrite(r'attack_school/result1.png', image)
+    cv2.imwrite(write_loc, image)
     return detection_list
 
 
-# Set paths to image to predict on and model
-# image_to_predict = r'attack_school/speckle_car.png'
-image_to_predict = r'attack_school/noise_speckle__result2.png'
-# image_to_predict = r'attack_school/noise_gaussian_result.png'
-model2 = YOLO(r'attack_school/yolov5lu.pt')  # load a pretrained YOLOv5lu model
-original = cv2.imread(image_to_predict, cv2.IMREAD_COLOR)
-img = np.copy(original)
+if __name__ == "__main__":
+
+    # Set input and output paths:
+    input_file = r'defense_school/noise_speckle_example1.png'
+    output_file = r'defense_school/noise_speckle_result1.png'
+    opts, args = getopt.getopt(sys.argv[1:],"hi:o:")
+    for opt, arg in opts:
+      if opt == '-h':
+         print ('test.py -i <inputfile> -o <outputfile>')
+         sys.exit()
+      elif opt in ("-i"):
+         input_file = arg
+      elif opt in ("-o"):
+         output_file = arg
+
+    # Set paths to image to predict on and model
+    model2 = YOLO(r'defense_school/yolov5lu.pt')  # load a pretrained YOLOv5lu model
+    original = cv2.imread(input_file, cv2.IMREAD_COLOR)
+    img = np.copy(original)
 
 
-# BEGIN DEFENSIVE LOGIC ###############################################################################
+    # BEGIN DEFENSIVE LOGIC ###############################################################################
 
-# Apply a Gaussian filter to remove high-frequency noise
-smoothed_image = filters.gaussian(img, sigma=1, channel_axis=None)
+    # Apply a Gaussian filter to remove high-frequency noise (smoothing)
+    denoised_image = filters.gaussian(img, sigma=.8, channel_axis=None)
 
-# Initialize the denoised image as the smoothed image
-denoised_image = smoothed_image.copy()
+    # Convert the image to float32 format
+    denoised_image = denoised_image.astype(np.float32)
 
-# Convert the image to float32 format
-denoised_image = denoised_image.astype(np.float32)
+    # Apply the bilateral filter to the color image
+    denoised_image = cv2.bilateralFilter(denoised_image, 4, 75, 75, 0)
 
-# Apply the bilateral filter to the color image
-denoised_image = cv2.bilateralFilter(denoised_image, 4, 75, 75, 0)
+    # Define the total variation denoising parameters
+    weight = 0.00001
+    num_iter = 5
 
-# Define the total variation denoising parameters
-weight = 0.0001
-max_iter = 5
-channel_axis=None
+    # Iterate the total variation denoising algorithm
+    for i in range(num_iter):
+        denoised_image = restoration.denoise_tv_chambolle(denoised_image, weight=weight, channel_axis=None)
 
-# Iterate the total variation denoising algorithm
-for i in range(max_iter):
-    denoised_image = restoration.denoise_tv_chambolle(denoised_image, weight=weight, channel_axis=channel_axis)
+    # Convert the image to uint8 format
+    denoised_image = (denoised_image * 255).astype(np.uint8)
 
-# Convert the image to uint8 format
-denoised_image = (denoised_image * 255).astype(np.uint8)
 
-# load picture to predict on ###########################################################################################
-results = model2.predict(source=denoised_image)
 
-# returns saved picture in set path defined in function 'plot_bboxes' line 93
-detections = plot_bboxes(denoised_image, results[0].boxes.boxes, score=True)
+    # load picture to predict on ###########################################################################################
+    results = model2.predict(source=denoised_image)
 
-print("The following were the detections made from YOLO:")
-print("")
-if len(detections) != 0:
-    for det in detections:
-        print(det)
-else:
-    print("No objects detected. Keep moving.")
+    # returns saved picture in set path defined in function 'plot_bboxes'
+    detections = plot_bboxes(denoised_image, results[0].boxes.boxes, write_loc=output_file, score=True)
+
+    print("The following were the detections made from YOLO:")
+    print("")
+    if len(detections) != 0:
+        for det in detections:
+            print(det)
+    else:
+        print("No objects detected. Keep moving.")
