@@ -16,6 +16,7 @@ pipenv shell
 3. Run celery
 
 ```bash
+cd web/backend
 celery -A app.celery worker --loglevel=info
 ```
 
@@ -29,3 +30,9 @@ python3 ./web/backend/app.py
 ```bash
 pipenv install <package_name>
 ```
+
+Todo:
+### Web
+- [x] original image preview
+- [ ] progress bar (discuss)
+- [ ] backend send image to frontend

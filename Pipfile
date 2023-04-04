@@ -15,6 +15,7 @@ flask-file-upload = "*"
 pillow = "*"
 werkzeug = "==0.16.0"
 requests = "*"
+flask-cors = "*"
 
 [dev-packages]
 
