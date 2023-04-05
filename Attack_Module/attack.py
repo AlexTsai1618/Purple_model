@@ -1,6 +1,9 @@
-from ultralytics import YOLO
+import getopt
+import sys
+
 import cv2
 import numpy as np
+from ultralytics import YOLO
 
 # Visualization Functions ##############################################################################################
 labels = {0: u'__background__', 1: u'person', 2: u'bicycle', 3: u'car', 4: u'motorcycle', 5: u'airplane',
@@ -38,7 +41,7 @@ def box_label(image, box, label='', color=(128, 128, 128), txt_color=(255, 255, 
                     lineType=cv2.LINE_AA)
 
 
-def plot_bboxes(image, boxes, labels=labels, colors=[], score=True, conf=None):
+def plot_bboxes(image, boxes, write_loc, labels=labels, colors=[], score=True, conf=None):
     detection_list = []
     # Define colors
     if not colors:
@@ -76,16 +79,8 @@ def plot_bboxes(image, boxes, labels=labels, colors=[], score=True, conf=None):
             detection_list.append(label)
 
     # Saves image with prediction results and bounding boxes/labels if detected
-    cv2.imwrite(r'attack_school/noise_result.png', image)
+    cv2.imwrite(write_loc, image)
     return detection_list
-
-
-# Set paths to image to predict on and model
-image_to_predict = r'attack_school/example1.png'
-model2 = YOLO(r'attack_school/yolov5lu.pt')  # load a pretrained YOLOv8n model
-img = cv2.imread(image_to_predict, cv2.IMREAD_COLOR)
-
-# ADD ATTACKING LOGIC TO BLUR IMAGE HERE ###############################################################################
 
 
 def tamper_img(typ, image):
@@ -109,19 +104,40 @@ def tamper_img(typ, image):
         return noisy
 
 
-noise_img = tamper_img("speckle", img)  # set it to "gauss" or "speckle"
+# Set paths to image to predict on and model ###########################################################################
+if __name__ == "__main__":
+    # Set input and output paths:
+    input_file = r'attack_school/example1.png'
+    output_file = r'attack_school/tampered.png'
+    model2 = YOLO(r'attack_school/yolov5lu.pt')  # load a pretrained YOLOv8n model
 
-# load picture to predict on ###########################################################################################
-results = model2.predict(source=noise_img)
+    opts, args = getopt.getopt(sys.argv[1:], "hi:o:")
+    for opt, arg in opts:
+        if opt == '-h':
+            print('python attack.py -i <inputfile> -o <outputfile>')
+            sys.exit()
+        elif opt in "-i":
+            input_file = arg
+        elif opt in "-o":
+            output_file = arg
 
-# returns saved picture in set path defined in function 'plot_bboxes' line 93
-detections = plot_bboxes(noise_img, results[0].boxes.boxes, score=True)
+    # Read in image to run AI model on
+    img = cv2.imread(input_file, cv2.IMREAD_COLOR)
 
-print("The following were the detections made from YOLO:")
-print("")
-if len(detections) != 0:
-    print("STOP!! Objects detected.")
-    for det in detections:
-        print(det)
-else:
-    print("No objects detected. Keep moving.")
+    # set Attack method to "gauss" or "speckle"
+    noise_img = tamper_img("speckle", img)
+    # cv2.imwrite(r'attack_school/speckle.png', noise_img)
+
+    # Get detection results from AI Model on picture
+    results = model2.predict(source=noise_img)
+
+    # returns saved picture in set path defined in function 'plot_bboxes' line 93
+    detections = plot_bboxes(image=noise_img, boxes=results[0].boxes.boxes, write_loc=output_file, score=True)
+    print("The following were the detections made from YOLO:")
+    print("")
+    if len(detections) != 0:
+        print("STOP!! Objects detected.")
+        for det in detections:
+            print(det)
+    else:
+        print("No objects detected. Keep moving.")
