@@ -7,28 +7,23 @@ const SuccessMessage = () => (
   </div>
 );
 
-const ImageUploadForm = () => {
+const ImageUploadForm = ({ pageType }) => {
   const [file, setFile] = useState(null);
   const [message, setMessage] = useState(null);
   const [response, setResponse] = useState(null);
   const [filePath, setFilePath] = useState(null);
-
+  const endpoint = pageType === 'attack' ? 'http://127.0.0.1:8000/attack/upload-image' : 'http://127.0.0.1:8000/defense/upload-image';
   const handleSubmit = async (e) => {
     e.preventDefault();
     const formData = new FormData();
     formData.append('image', file);
     try {
-      const res = await axios.post('http://127.0.0.1:8000/upload-image', formData);
+      const res = await axios.post(endpoint, formData);
       setResponse(res.data);
       setMessage(null);
       setFilePath(res.data.filePath); // store file path in state
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => {
-        const imageDataUrl = reader.result;
-        localStorage.setItem('image', imageDataUrl); // store image data in localStorage
-      };
-      localStorage.setItem('response', JSON.stringify(res.data));
+      localStorage.setItem('response', JSON.stringify(res.data)); 
+      // store JSON response in localStorage
     } catch (err) {
       setMessage(err.message);
     }
@@ -46,7 +41,7 @@ const ImageUploadForm = () => {
 
   if (response && response.success) {
     return (
-    <><SuccessMessage /><ImagePreview /></>
+    <><SuccessMessage /><ImagePreview pageType={pageType}/></>
     );
   }
 

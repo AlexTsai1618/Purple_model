@@ -2,11 +2,11 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import ProgressBar from './ProgressBar';
 
-const ImagePreview = () => {
+const ImagePreview = ({pageType}) => {
   const [imageDataUrl, setImageDataUrl] = useState(null);
   const [uploadedImage, setUploadedImage] = useState(null);
   const [progress, setProgress] = useState(0);
-
+  const endpoint = pageType === 'attack' ? `http://127.0.0.1:8000/attack/status/${task_id}` : `http://127.0.0.1:8000/defense/status/${task_id}`;
   useEffect(() => {
     const dataUrl = localStorage.getItem('image');
     setImageDataUrl(dataUrl);
@@ -25,22 +25,25 @@ const ImagePreview = () => {
     reader.onload = async () => {
       const imageDataUrl = reader.result;
       setUploadedImage(imageDataUrl);
-      
-    //   const task_id = JSON.parse(localStorage.getItem('response')).task_id;
-    //   const interval = setInterval(async () => {
-    //     const taskResponse = await axios.get(`http://127.0.0.1:8000/task-status/${task_id}`);
-    //     if (taskResponse && taskResponse.data && taskResponse.data.progress) {
-    //       setProgress(taskResponse.data.progress);
-    //     }
-    //     if (taskResponse && taskResponse.data && taskResponse.data.state === 'SUCCESS') {
-    //       clearInterval(interval);
-    //     }
-    //     else{
-    //         alert('Something went wrong! Please try again later.')
-    //     }
-    //   }, 4000);
+  
+      const localStorageItem = localStorage.getItem('response');
+      if (localStorageItem) {
+        const task_id = JSON.parse(localStorageItem).task_id;
+        const interval = setInterval(async () => {
+          const taskResponse = await axios.get(endpoint);
+          if (taskResponse && taskResponse.data && taskResponse.data.progress) {
+            setProgress(taskResponse.data.progress);
+          }
+          if (taskResponse && taskResponse.data && taskResponse.data.state === 'SUCCESS') {
+            clearInterval(interval);
+          }
+        }, 4000);
+      } else {
+        console.log('localStorage item not found');
+      }
     };
   };
+  
 
   return (
     <div className="row">

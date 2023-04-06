@@ -1,1 +1,5 @@
-web/backend/uploads/*
+web/backend/static/results*
+web/backend/static/uploads*
+web/backend/*.png
+web/backend/yolov5lu.pt
+Attack_Module/yolov5lu.pt

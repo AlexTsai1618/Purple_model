@@ -16,6 +16,7 @@ pillow = "*"
 werkzeug = "==0.16.0"
 requests = "*"
 flask-cors = "*"
+scikit-image = "*"
 
 [dev-packages]
 

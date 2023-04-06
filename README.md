@@ -34,5 +34,8 @@ pipenv install <package_name>
 Todo:
 ### Web
 - [x] original image preview
-- [ ] progress bar (discuss)
+- [x] progress bar (discuss)
+- [x] Pipline intergration (attack)
+- [ ] Pipline intergration (defense)
+- [ ] Pipline celery get task.info
 - [ ] backend send image to frontend

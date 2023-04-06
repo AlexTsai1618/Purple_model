@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-
+import Spinner from './Spinner';
 const ProgressBar = () => {
   const [progress, setProgress] = useState(0);
   const [taskState, setTaskState] = useState('PENDING');
@@ -34,7 +34,7 @@ const ProgressBar = () => {
   if (taskState === 'SUCCESS') {
     progressBar = <p>Task completed successfully!</p>;
   } else if (taskState === 'PENDING') {
-    progressBar = <progress value={progress} max="100">Processing...</progress>;
+    progressBar =  <Spinner />;
   } else {
     progressBar = <p>Error: Task failed with status {taskState}</p>;
   }

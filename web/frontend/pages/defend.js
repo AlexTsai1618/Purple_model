@@ -4,7 +4,7 @@ const Home = () => (
 <Layout>
 <div>
 <h1>Defend</h1>
-<ImageUploadForm />
+<ImageUploadForm pageType={defense}/>
 </div>
 </Layout>
 );

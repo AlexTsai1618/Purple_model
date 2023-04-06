@@ -1,19 +1,25 @@
-import requests,time
 
-# Upload image
-url = 'http://localhost:8000/upload-image'
-files = {'image': open('./image.png', 'rb')}
-response = requests.post(url, files=files)
-print(response)
-task_id = response.json()['task_id']
+import requests
 
-# Check task status
-url = f'http://localhost:8000/task-status/865bd913-b132-4415-8d4f-3cdeccaecbbf'
-response = requests.get(url)
+def test_attack():
+    # Upload image
+    with open('example1.png', 'rb') as f:
+        files = {'image': f}
+        response = requests.post('http://localhost:8000/attack/upload-image', files=files)
+        assert response.status_code == 200
 
-print(response.json())
-# Wait for task to complete
-while response.json()['state'] not in ['SUCCESS', 'FAILURE']:
-    time.sleep(2)
-    response = requests.get(url)
-    print(response.json())
+        # Get task_id from response
+        task_id = response.json()['task_id']
+
+    # Check status (PENDING, then SUCCESS)
+    response = requests.get(f'http://localhost:8000/attack/status/{task_id}')
+    assert response.status_code == 200
+    assert response.json()['success'] == True
+
+    # Get image result URL from response
+    image_result_url = response.json()['image_result_url']
+    assert image_result_url.startswith('http://localhost:8000/result/images/')
+    assert image_result_url.endswith('.png')
+
+if __name__ == '__main__':
+    test_attack()
