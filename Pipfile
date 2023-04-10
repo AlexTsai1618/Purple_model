@@ -17,6 +17,7 @@ werkzeug = "==0.16.0"
 requests = "*"
 flask-cors = "*"
 scikit-image = "*"
+amqp = "*"
 
 [dev-packages]
 

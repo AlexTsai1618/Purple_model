@@ -6,10 +6,36 @@ const ImagePreview = ({pageType}) => {
   const [imageDataUrl, setImageDataUrl] = useState(null);
   const [uploadedImage, setUploadedImage] = useState(null);
   const [progress, setProgress] = useState(0);
-  const endpoint = pageType === 'attack' ? `http://127.0.0.1:8000/attack/status/${task_id}` : `http://127.0.0.1:8000/defense/status/${task_id}`;
+  const [resultImage, setResultImage] = useState(null);
+  
   useEffect(() => {
-    const dataUrl = localStorage.getItem('image');
-    setImageDataUrl(dataUrl);
+    const localStorageItem = JSON.parse(localStorage.getItem('response'));
+    const imageUploadUrl = localStorageItem.image_upload_url;
+    setImageDataUrl(imageUploadUrl);
+    const fetchTaskProgress = async () => {
+      
+      const response = JSON.parse(localStorage.getItem('response'));
+      
+      const endpoint = pageType === "attack" ?  `http://127.0.0.1:8000/attack/status/` :   `http://127.0.0.1:8000/defense/status/` ;
+      
+      try {
+        const taskResponse = await axios.get(endpoint+response.task_id);
+      
+        if (taskResponse.data.status === 'SUCCESS') {
+          setResultImage(taskResponse.data.image_result_url.result);
+        } else {
+          setTaskState(taskResponse.data.state);
+          
+          setProgress(taskResponse.data.progress);
+        }
+      } catch (error) {
+        console.error(error);
+        console.log(pageType)
+      }
+    };
+    const interval = setInterval(fetchTaskProgress, 1000);
+
+    return () => clearInterval(interval);    
   }, []);
 
   const handleFileInputChange = (event) => {
@@ -29,15 +55,19 @@ const ImagePreview = ({pageType}) => {
       const localStorageItem = localStorage.getItem('response');
       if (localStorageItem) {
         const task_id = JSON.parse(localStorageItem).task_id;
+        const endpoint = pageType === 'attack' ? `http://127.0.0.1:8000/attack/status/` : `http://127.0.0.1:8000/defense/status/`;
         const interval = setInterval(async () => {
-          const taskResponse = await axios.get(endpoint);
-          if (taskResponse && taskResponse.data && taskResponse.data.progress) {
+          
+          const taskResponse = await axios.get(endpoint+task_id);
+          console.log(taskResponse)
+          if (taskResponse && taskResponse.data ) {
             setProgress(taskResponse.data.progress);
           }
-          if (taskResponse && taskResponse.data && taskResponse.data.state === 'SUCCESS') {
+          if (taskResponse && taskResponse.data && taskResponse.data.success) {
+            setResultImage(taskResponse.data.image_result_url); // update result image URL
             clearInterval(interval);
           }
-        }, 4000);
+        }, 1000);
       } else {
         console.log('localStorage item not found');
       }
@@ -51,12 +81,11 @@ const ImagePreview = ({pageType}) => {
         <h2>Originial Image</h2>
         {imageDataUrl && <img src={imageDataUrl} alt="Local Storage Image Preview" className="img-fluid" />}
       </div>
-      <div className="col">
-        <ProgressBar/>
-      </div>
+
       <div className="col">
         <h2>Modified Image</h2>
-        
+        {resultImage && <img src={resultImage} alt="Result Image Preview" className="img-fluid" />}
+        {!resultImage && <p>Result image will appear here when processing is complete</p>}        
       </div>
 
     </div>

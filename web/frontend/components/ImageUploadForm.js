@@ -12,7 +12,8 @@ const ImageUploadForm = ({ pageType }) => {
   const [message, setMessage] = useState(null);
   const [response, setResponse] = useState(null);
   const [filePath, setFilePath] = useState(null);
-  const endpoint = pageType === 'attack' ? 'http://127.0.0.1:8000/attack/upload-image' : 'http://127.0.0.1:8000/defense/upload-image';
+  console.log('pageType:', pageType);
+  const endpoint = pageType === "attack" ? 'http://127.0.0.1:8000/attack/upload-image' : 'http://127.0.0.1:8000/defense/upload-image';
   const handleSubmit = async (e) => {
     e.preventDefault();
     const formData = new FormData();
