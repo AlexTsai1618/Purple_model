@@ -1,5 +1,17 @@
 # Purple_model
 
+
+## Introduction
+![](./Purple_model.png)
+
+This is a web application for image processing. It is based on Flask and Celery. The backend is written in Python and the frontend is written in Next.js.
+
+The main goal of this project is to demonstrate the model poisoning attack and defense. The attack is based on the paper [](). The defense is based on the paper [Defending Against Model Poisoning Attacks]().
+
+## Build with
+- ![Flask](https://img.shields.io/badge/Flask-000000?style=for-the-badge&logo=flask&logoColor=white)
+- ![Next.js](https://img.shields.io/badge/next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)
+- ![Celery](https://img.shields.io/badge/Celery-37814A.svg?style=for-the-badge&logo=Celery&logoColor=white)
 ### How to use
 
 1. Install the required packages
@@ -25,6 +37,12 @@ celery -A app.celery worker --loglevel=info
 python3 ./web/backend/app.py
 ```
 
+5. Run the frontend (http://localhost:3000)
+```bash
+cd web/frontend
+npm run dev
+```
+
 ### How to install extra packages
 
 ```bash
@@ -36,6 +54,6 @@ Todo:
 - [x] original image preview
 - [x] progress bar (discuss)
 - [x] Pipline intergration (attack)
-- [ ] Pipline intergration (defense)
-- [ ] Pipline celery get task.info
-- [ ] backend send image to frontend
+- [x] Pipline intergration (defense)
+- [x] Pipline celery get task.info
+- [x] backend send image to frontend
