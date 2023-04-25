@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import ProgressBar from './ProgressBar';
+import Content from './Content';
+
 
 const ImagePreview = ({pageType}) => {
   const [imageDataUrl, setImageDataUrl] = useState(null);
@@ -37,42 +38,55 @@ const ImagePreview = ({pageType}) => {
 
     return () => clearInterval(interval);    
   }, []);
-
-  const handleFileInputChange = (event) => {
-    const file = event.target.files[0];
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onprogress = (event) => {
-      if (event.lengthComputable) {
-        const percent = Math.round((event.loaded / event.total) * 100);
-        setProgress(percent);
-      }
-    };
-    reader.onload = async () => {
-      const imageDataUrl = reader.result;
-      setUploadedImage(imageDataUrl);
-  
-      const localStorageItem = localStorage.getItem('response');
-      if (localStorageItem) {
-        const task_id = JSON.parse(localStorageItem).task_id;
-        const endpoint = pageType === 'attack' ? `http://127.0.0.1:8000/attack/status/` : `http://127.0.0.1:8000/defense/status/`;
-        const interval = setInterval(async () => {
-          
-          const taskResponse = await axios.get(endpoint+task_id);
-          console.log(taskResponse)
-          if (taskResponse && taskResponse.data ) {
-            setProgress(taskResponse.data.progress);
-          }
-          if (taskResponse && taskResponse.data && taskResponse.data.success) {
-            setResultImage(taskResponse.data.image_result_url); // update result image URL
-            clearInterval(interval);
-          }
-        }, 1000);
-      } else {
-        console.log('localStorage item not found');
-      }
-    };
+  const downloadImage = () => {
+    axios({
+      url: resultImage,
+      method: 'GET',
+      responseType: 'blob',
+    }).then((response) => {
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'modified-image.png'); // specify the filename here
+      document.body.appendChild(link);
+      link.click();
+    });
   };
+  // const handleFileInputChange = (event) => {
+  //   const file = event.target.files[0];
+  //   const reader = new FileReader();
+  //   reader.readAsDataURL(file);
+  //   reader.onprogress = (event) => {
+  //     if (event.lengthComputable) {
+  //       const percent = Math.round((event.loaded / event.total) * 100);
+  //       setProgress(percent);
+  //     }
+  //   };
+  //   reader.onload = async () => {
+  //     const imageDataUrl = reader.result;
+  //     setUploadedImage(imageDataUrl);
+  
+  //     const localStorageItem = localStorage.getItem('response');
+  //     if (localStorageItem) {
+  //       const task_id = JSON.parse(localStorageItem).task_id;
+  //       const endpoint = pageType === 'attack' ? `http://127.0.0.1:8000/attack/status/` : `http://127.0.0.1:8000/defense/status/`;
+  //       const interval = setInterval(async () => {
+          
+  //         const taskResponse = await axios.get(endpoint+task_id);
+  //         console.log(taskResponse)
+  //         if (taskResponse && taskResponse.data ) {
+  //           setProgress(taskResponse.data.progress);
+  //         }
+  //         if (taskResponse && taskResponse.data && taskResponse.data.success) {
+  //           setResultImage(taskResponse.data.image_result_url); // update result image URL
+  //           clearInterval(interval);
+  //         }
+  //       }, 1000);
+  //     } else {
+  //       console.log('localStorage item not found');
+  //     }
+  //   };
+  // };
   
 
   return (
@@ -84,8 +98,21 @@ const ImagePreview = ({pageType}) => {
 
       <div className="col">
         <h2>Modified Image</h2>
-        {resultImage && <img src={resultImage} alt="Result Image Preview" className="img-fluid" />}
+        {resultImage && (
+          <div>
+            <div>
+              <img src={resultImage} alt="Result Image Preview" className="img-fluid" />            
+            </div>
+            <div>
+              <button type="button" class="btn btn-primary btn-lg btn-block" onClick={downloadImage}>Download</button>
+            </div>
+          </div>
+        )}
         {!resultImage && <p>Result image will appear here when processing is complete</p>}        
+      </div>
+
+      <div>
+        <Content pageType={pageType} />
       </div>
 
     </div>

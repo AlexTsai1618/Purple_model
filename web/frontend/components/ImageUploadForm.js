@@ -53,7 +53,7 @@ const ImageUploadForm = ({ pageType }) => {
         <div className="input-group">
           <input
             type="file"
-            className="form-control"
+            className="form-control fluid"
             id="image"
             onChange={(e) => setFile(e.target.files[0])}
           />
